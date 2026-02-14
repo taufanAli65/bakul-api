@@ -1,0 +1,12 @@
+SQLAlchemy
+fastapi
+alembic
+PyJWT
+fastapi-limiter
+passlib[bcrypt]
+pydantic-settings
+python-dotenv
+uvicorn
+asyncpg
+pydantic
+greenlet
