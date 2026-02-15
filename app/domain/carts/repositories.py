@@ -53,7 +53,7 @@ class CartRepository:
         cart = result.scalars().first()
         if not cart:
             return False
-        self.db.delete(cart)
+        await self.db.delete(cart)
         await self.db.commit()
         return True
 
@@ -67,6 +67,6 @@ class CartRepository:
         if not carts:
             return False
         for cart in carts:
-            self.db.delete(cart)
+            await self.db.delete(cart)
         await self.db.commit()
         return True

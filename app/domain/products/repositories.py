@@ -23,11 +23,15 @@ class ProductRepository:
             price=price,
             product_image_url=product_image_url,
         )
+        self.db.add(new_product)
+        await self.db.flush()
+
         add_product_stock = TrnProductStock(
             id_product=new_product.id_product,
             stock=stock,
         )
-        self.db.add_all([new_product, add_product_stock])
+        self.db.add(add_product_stock)
+
         await self.db.commit()
         await self.db.refresh(new_product)
         await self.db.refresh(add_product_stock)

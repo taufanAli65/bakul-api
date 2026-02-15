@@ -50,10 +50,7 @@ class TransactionService:
             if product_stock < item.quantity:
                 raise ValueError(f"Insufficient stock for product {item.id_product}")
 
-            unit_price = product.price
-            if item.price_at_time is not None:
-                unit_price_candidate = item.price_at_time // item.quantity
-                unit_price = unit_price_candidate if unit_price_candidate > 0 else product.price
+            unit_price = item.price_at_time if item.price_at_time is not None else product.price
 
             transaction_items.append({
                 "id_product": item.id_product,
@@ -86,7 +83,8 @@ class TransactionService:
         expedition = await self.expedition_repo.get_expedition_service_by_id(expedition_service_id)
         if not expedition:
             raise ValueError("Expedition service not found")
-        return await self.transaction_repo.update_expedition_service(transaction_id, expedition_service_id)
+        await self.transaction_repo.update_expedition_service(transaction_id, expedition_service_id)
+        return await self.transaction_repo.get_transaction_by_id(transaction_id)
 
     async def get_all_transactions(
         self,

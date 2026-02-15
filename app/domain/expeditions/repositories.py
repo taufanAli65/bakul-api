@@ -49,7 +49,6 @@ class ExpeditionRepository:
         service = result.scalars().first()
         if not service:
             return False
-        
-        self.db.delete(service)
+        await self.db.delete(service)
         await self.db.commit()
         return True

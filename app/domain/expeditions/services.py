@@ -20,3 +20,6 @@ class ExpeditionService:
     
     async def get_all_expedition_services(self, limit: int = 10, offset: int = 0) -> list[MstExpeditionService]:
         return await self.expedition_repo.get_all_expedition_services(limit, offset)
+
+    async def delete_expedition_service(self, service_id: str) -> bool:
+        return await self.expedition_repo.delete_expedition_service(service_id)

@@ -12,9 +12,9 @@ class CartCreate(CartBase):
     pass
 
 class CartUpdate(BaseModel):
-    id_product: Optional[UUID]
-    quantity: Optional[int]
-    price_at_time: Optional[int]
+    id_product: Optional[UUID] = None
+    quantity: Optional[int] = None
+    price_at_time: Optional[int] = None
 
 class CartDelete(BaseModel):
     id_product: UUID

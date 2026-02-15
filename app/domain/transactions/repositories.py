@@ -2,6 +2,7 @@ from typing import Optional, Sequence, TypedDict
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm.attributes import set_committed_value
 from app.domain.transactions.models import MstTransaction, TrnTransactionItem, TrnTransactionStatus, TransactionStatus
 
 
@@ -29,8 +30,7 @@ class TransactionRepository:
             id_expedition_service=id_expedition_service,
         )
         self.db.add(new_transaction)
-        await self.db.commit()
-        await self.db.refresh(new_transaction)
+        await self.db.flush()
 
         transaction_items = []
         for item in items:
@@ -41,20 +41,19 @@ class TransactionRepository:
                 price_at_time=item["price_at_time"],
             )
             transaction_items.append(transaction_item)
-        
+
         transaction_status = TrnTransactionStatus(
             id_transaction=new_transaction.id_transaction,
             status=TransactionStatus.PENDING,
         )
-        self.db.add(transaction_status)
 
+        self.db.add(transaction_status)
         self.db.add_all(transaction_items)
         await self.db.commit()
-        for item in transaction_items:
-            await self.db.refresh(item)
-        await self.db.refresh(transaction_status)
-        new_transaction.items = transaction_items  # expose items for response
-        new_transaction.status = transaction_status.status  # expose status for response
+
+        await self.db.refresh(new_transaction)
+        set_committed_value(new_transaction, "items", transaction_items)
+        setattr(new_transaction, "status", transaction_status.status)
         return new_transaction
     
     async def update_transaction_status(self, transaction_id: UUID, status: TransactionStatus) -> Optional[TrnTransactionStatus]:
@@ -80,7 +79,7 @@ class TransactionRepository:
         if not row:
             return None
         transaction, item, status = row
-        transaction.items = [item]  # expose items for response
+        set_committed_value(transaction, "items", [item])
         transaction.status = status  # expose status for response
         return transaction
     
@@ -125,7 +124,7 @@ class TransactionRepository:
         transactions_dict = {}
         for transaction, item, status in result.all():
             if transaction.id_transaction not in transactions_dict:
-                transaction.items = []  # initialize items list
+                set_committed_value(transaction, "items", [])  # initialize items list without triggering lazy load
                 transaction.status = status  # expose status for response
                 transactions_dict[transaction.id_transaction] = transaction
             transactions_dict[transaction.id_transaction].items.append(item)  # append items to the transaction
