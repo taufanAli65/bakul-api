@@ -11,3 +11,7 @@ asyncpg
 pydantic
 greenlet
 python-multipart
+pytest
+pytest-asyncio
+httpx
+aiosqlite

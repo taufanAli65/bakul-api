@@ -1,7 +1,6 @@
 from app.domain.carts.models import MstCart
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.domain.carts.schemas import CartCreate, CartUpdate, CartDelete
 from typing import Optional
 from uuid import UUID
 
@@ -9,27 +8,33 @@ class CartRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_cart(self, cart_in: CartCreate) -> MstCart:
+    async def create_cart(self, id_user: UUID, id_product: UUID, quantity: int, price_at_time: int) -> MstCart:
         new_cart = MstCart(
-            id_user=cart_in.id_user,
-            id_product=cart_in.id_product,
-            quantity=cart_in.quantity,
-            price_at_time=cart_in.price_at_time
+            id_user=id_user,
+            id_product=id_product,
+            quantity=quantity,
+            price_at_time=price_at_time,
         )
         self.db.add(new_cart)
         await self.db.commit()
         await self.db.refresh(new_cart)
         return new_cart
 
-    async def update_cart(self, cart_id: UUID, cart_in: CartUpdate) -> Optional[MstCart]:
+    async def update_cart(
+        self,
+        cart_id: UUID,
+        quantity: Optional[int] = None,
+        price_at_time: Optional[int] = None,
+    ) -> Optional[MstCart]:
         result = await self.db.execute(select(MstCart).where(MstCart.id_cart == cart_id))
         cart = result.scalars().first()
         if not cart:
             return None
-            
-        update_data = cart_in.dict(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(cart, key, value)
+
+        if quantity is not None:
+            cart.quantity = quantity
+        if price_at_time is not None:
+            cart.price_at_time = price_at_time
 
         self.db.add(cart)
         await self.db.commit()
@@ -40,10 +45,10 @@ class CartRepository:
         result = await self.db.execute(select(MstCart).where(MstCart.id_user == user_id).limit(limit).offset(offset))
         return result.scalars().all()
     
-    async def delete_cart_each_item(self, cart_in: CartDelete) -> bool:
+    async def delete_cart_each_item(self, id_user: UUID, id_product: UUID) -> bool:
         result = await self.db.execute(select(MstCart).where(
-            MstCart.id_product == cart_in.id_product,
-            MstCart.id_user == cart_in.id_user
+            MstCart.id_product == id_product,
+            MstCart.id_user == id_user,
         ))
         cart = result.scalars().first()
         if not cart:
@@ -51,6 +56,10 @@ class CartRepository:
         self.db.delete(cart)
         await self.db.commit()
         return True
+
+    async def get_cart_by_id(self, cart_id: UUID) -> Optional[MstCart]:
+        result = await self.db.execute(select(MstCart).where(MstCart.id_cart == cart_id))
+        return result.scalars().first()
     
     async def empty_cart_by_user_id(self, user_id: UUID) -> bool:
         result = await self.db.execute(select(MstCart).where(MstCart.id_user == user_id))

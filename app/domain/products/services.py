@@ -9,10 +9,22 @@ class ProductService:
         self.product_repo = product_repo
 
     async def create_product(self, product_in: ProductCreate) -> MstProduct:
-        return await self.product_repo.create_product(product_in)
+        return await self.product_repo.create_product(
+            name=product_in.name,
+            description=product_in.description,
+            price=product_in.price,
+            stock=product_in.stock,
+            product_image_url=product_in.product_image_url,
+        )
 
     async def update_product(self, product_id: UUID, product_in: ProductUpdate) -> Optional[MstProduct]:
-        return await self.product_repo.update_product(product_id, product_in)
+        return await self.product_repo.update_product(
+            product_id,
+            name=product_in.name,
+            description=product_in.description,
+            price=product_in.price,
+            product_image_url=product_in.product_image_url,
+        )
 
     async def update_product_stock(self, product_id: UUID, stock: int) -> Optional[TrnProductStock]:
         return await self.product_repo.update_product_stock(product_id, stock)

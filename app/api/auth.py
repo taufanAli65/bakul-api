@@ -4,6 +4,7 @@ from app.domain.users.service import UserService
 from app.core.dependencies import get_auth_service, get_user_service
 from app.domain.auth.service import AuthService
 from app.utils.response_utils import create_response
+from app.domain.users.models import UserRole
 
 router = APIRouter()
 

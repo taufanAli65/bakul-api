@@ -3,22 +3,29 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.products.models import MstProduct, TrnProductStock
-from app.domain.products.schemas import ProductCreate, ProductUpdate
 
 class ProductRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_product(self, product_in: ProductCreate) -> MstProduct:
+    async def create_product(
+        self,
+        *,
+        name: str,
+        description: Optional[str],
+        price: int,
+        stock: int,
+        product_image_url: Optional[str],
+    ) -> MstProduct:
         new_product = MstProduct(
-            name=product_in.name,
-            description=product_in.description,
-            price=product_in.price,
-            product_image_url=product_in.product_image_url,
+            name=name,
+            description=description,
+            price=price,
+            product_image_url=product_image_url,
         )
         add_product_stock = TrnProductStock(
             id_product=new_product.id_product,
-            stock=product_in.stock,
+            stock=stock,
         )
         self.db.add_all([new_product, add_product_stock])
         await self.db.commit()
@@ -27,15 +34,28 @@ class ProductRepository:
         new_product.stock = add_product_stock.stock  # expose stock for response
         return new_product
 
-    async def update_product(self, product_id: uuid.UUID, product_in: ProductUpdate) -> Optional[MstProduct]:
+    async def update_product(
+        self,
+        product_id: uuid.UUID,
+        *,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        price: Optional[int] = None,
+        product_image_url: Optional[str] = None,
+    ) -> Optional[MstProduct]:
         result = await self.db.execute(select(MstProduct).where(MstProduct.id_product == product_id))
         product = result.scalars().first()
         if not product:
             return None
 
-        update_data = product_in.dict(exclude_unset=True)
-        for key, value in update_data.items():
-            setattr(product, key, value)
+        if name is not None:
+            product.name = name
+        if description is not None:
+            product.description = description
+        if price is not None:
+            product.price = price
+        if product_image_url is not None:
+            product.product_image_url = product_image_url
 
         self.db.add(product)
         await self.db.commit()

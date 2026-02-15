@@ -25,7 +25,7 @@ class ExpeditionRepository:
         return new_services
 
     async def update_expedition_service(self, service_id: uuid.UUID, name: str) -> Optional[MstExpeditionService]:
-        result = self.db.execute(select(MstExpeditionService).where(MstExpeditionService.id_expedition_service == service_id))
+        result = await self.db.execute(select(MstExpeditionService).where(MstExpeditionService.id_expedition_service == service_id))
         service = result.scalars().first()
         if not service:
             return None
@@ -37,15 +37,15 @@ class ExpeditionRepository:
         return service
         
     async def get_expedition_service_by_id(self, service_id: uuid.UUID) -> Optional[MstExpeditionService]:
-        result = self.db.execute(select(MstExpeditionService).where(MstExpeditionService.id_expedition_service == service_id))
+        result = await self.db.execute(select(MstExpeditionService).where(MstExpeditionService.id_expedition_service == service_id))
         return result.scalars().first()
     
     async def get_all_expedition_services(self, limit: int = 10, offset: int = 0) -> list[MstExpeditionService]:
-        result = self.db.execute(select(MstExpeditionService).limit(limit).offset(offset))
+        result = await self.db.execute(select(MstExpeditionService).limit(limit).offset(offset))
         return result.scalars().all()
 
     async def delete_expedition_service(self, service_id: uuid.UUID) -> bool:
-        result = self.db.execute(select(MstExpeditionService).where(MstExpeditionService.id_expedition_service == service_id))
+        result = await self.db.execute(select(MstExpeditionService).where(MstExpeditionService.id_expedition_service == service_id))
         service = result.scalars().first()
         if not service:
             return False

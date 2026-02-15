@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, status
 from app.domain.users.schemas import UserRole
 from app.domain.users.models import MstUser
-from app.core.dependencies import get_user_service, get_current_admin
+from app.core.dependencies import get_expedition_service, get_current_admin
 from app.utils.response_utils import create_response
 from app.domain.expeditions.services import ExpeditionService
 
@@ -11,7 +11,7 @@ router = APIRouter()
 @router.post("/", response_model=None)
 async def create_expedition_service(
     name: str,
-    expedition_service: ExpeditionService = Depends(get_user_service),
+    expedition_service: ExpeditionService = Depends(get_expedition_service),
     current_user: MstUser = Depends(get_current_admin)
 ):
     new_service = await expedition_service.create_expedition_service(name)
@@ -28,7 +28,7 @@ async def create_expedition_service(
 @router.post("/bulk", response_model=None)
 async def bulk_create_expedition_services(
     services: list[str],
-    expedition_service: ExpeditionService = Depends(get_user_service),
+    expedition_service: ExpeditionService = Depends(get_expedition_service),
     current_user: MstUser = Depends(get_current_admin)
 ):
     new_services = await expedition_service.bulk_create_expedition_services(services)
@@ -47,7 +47,7 @@ async def bulk_create_expedition_services(
 
 @router.get("/", response_model=None)
 async def read_expedition_services(
-    expedition_service: ExpeditionService = Depends(get_user_service),
+    expedition_service: ExpeditionService = Depends(get_expedition_service),
     limit: int = 10,
     offset: int = 0
 ):
@@ -73,7 +73,7 @@ async def read_expedition_services(
 @router.get("/{service_id}", response_model=None)
 async def read_expedition_service(
     service_id: uuid.UUID,
-    expedition_service: ExpeditionService = Depends(get_user_service)
+    expedition_service: ExpeditionService = Depends(get_expedition_service)
 ):
     service = await expedition_service.get_expedition_service_by_id(service_id)
     if not service:
@@ -97,7 +97,7 @@ async def read_expedition_service(
 async def update_expedition_service(
     service_id: uuid.UUID,
     name: str,
-    expedition_service: ExpeditionService = Depends(get_user_service),
+    expedition_service: ExpeditionService = Depends(get_expedition_service),
     current_user: MstUser = Depends(get_current_admin)
 ):
     updated_service = await expedition_service.update_expedition_service(service_id, name)
@@ -121,7 +121,7 @@ async def update_expedition_service(
 @router.delete("/{service_id}", response_model=None)
 async def delete_expedition_service(
     service_id: uuid.UUID,
-    expedition_service: ExpeditionService = Depends(get_user_service),
+    expedition_service: ExpeditionService = Depends(get_expedition_service),
     current_user: MstUser = Depends(get_current_admin)
 ):
     deleted = await expedition_service.delete_expedition_service(service_id)
