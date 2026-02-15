@@ -12,6 +12,10 @@ from app.domain.users.models import MstUser
 from app.domain.auth.service import AuthService
 from app.domain.products.repositories import ProductRepository
 from app.domain.products.services import ProductService
+from app.domain.expeditions.repositories import ExpeditionRepository
+from app.domain.expeditions.services import ExpeditionService
+from app.domain.carts.repositories import CartRepository
+from app.domain.carts.services import CartService
 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
@@ -21,15 +25,27 @@ security = HTTPBearer()
 def get_user_repo(db: AsyncSession = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
 
+def get_product_repo(db: AsyncSession = Depends(get_db)) -> ProductRepository:
+    return ProductRepository(db)
+
+def get_expedition_repo(db: AsyncSession = Depends(get_db)) -> ExpeditionRepository:
+    return ExpeditionRepository(db)
+
+def get_cart_repo(db: AsyncSession = Depends(get_db)) -> CartRepository:
+    return CartRepository(db)
+
 # Services
 def get_user_service(user_repo: UserRepository = Depends(get_user_repo)) -> UserService:
     return UserService(user_repo)
 
-def get_product_repo(db: AsyncSession = Depends(get_db)) -> ProductRepository:
-    return ProductRepository(db)
-
 def get_product_service(product_repo: ProductRepository = Depends(get_product_repo)) -> ProductService:
     return ProductService(product_repo)
+
+def get_expedition_service(expedition_repo: ExpeditionRepository = Depends(get_expedition_repo)) -> ExpeditionService:
+    return ExpeditionService(expedition_repo)
+
+def get_cart_service(cart_repo: CartRepository = Depends(get_cart_repo)) -> CartService:
+    return CartService(cart_repo)
 
 def get_auth_service(user_repo: UserRepository = Depends(get_user_repo)) -> AuthService:
     return AuthService(user_repo)
