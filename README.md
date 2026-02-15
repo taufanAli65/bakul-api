@@ -50,6 +50,12 @@ Start the development server with hot-reload:
 uvicorn app.main:app --reload --port 8000
 ```
 
+## Running Unit Test
+
+```bash
+pytest -q
+```
+
 ## API Documentation
 
 Once the server is running, you can access the interactive API documentation at:
