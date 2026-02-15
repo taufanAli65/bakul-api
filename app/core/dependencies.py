@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, status
 import jwt
 from jwt.exceptions import InvalidTokenError
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import settings
 from app.domain.auth.security import ALGORITHM
@@ -10,24 +10,32 @@ from app.domain.users.repositories import UserRepository
 from app.domain.users.service import UserService
 from app.domain.users.models import MstUser
 from app.domain.auth.service import AuthService
+from app.domain.products.repositories import ProductRepository
+from app.domain.products.services import ProductService
 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 security = HTTPBearer()
 
 # Repositories
-def get_user_repo(db: Session = Depends(get_db)) -> UserRepository:
+def get_user_repo(db: AsyncSession = Depends(get_db)) -> UserRepository:
     return UserRepository(db)
 
 # Services
 def get_user_service(user_repo: UserRepository = Depends(get_user_repo)) -> UserService:
     return UserService(user_repo)
 
+def get_product_repo(db: AsyncSession = Depends(get_db)) -> ProductRepository:
+    return ProductRepository(db)
+
+def get_product_service(product_repo: ProductRepository = Depends(get_product_repo)) -> ProductService:
+    return ProductService(product_repo)
+
 def get_auth_service(user_repo: UserRepository = Depends(get_user_repo)) -> AuthService:
     return AuthService(user_repo)
 
 # Auth Dependency
-async def get_current_user(token: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> MstUser:
+async def get_current_user(token: HTTPAuthorizationCredentials = Depends(security), db: AsyncSession = Depends(get_db)) -> MstUser:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

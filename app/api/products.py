@@ -1,17 +1,18 @@
 import uuid
-from fastapi import APIRouter, Depends, status
-from app.domain.users.schemas import UserRole
-from app.domain.products.schemas import ProductBase, ProductCreate, ProductUpdate
+from typing import Optional
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from app.domain.products.schemas import ProductCreate, ProductUpdate
 from app.domain.users.models import MstUser
-from app.core.dependencies import get_user_service, get_current_admin
+from app.core.dependencies import get_current_admin, get_product_service
 from app.domain.products.services import ProductService
 from app.utils.response_utils import create_response
+from app.core.image_service import ImageService
 
 router = APIRouter()
 
 @router.get("/", response_model=None)
 async def read_products(
-    product_service: ProductService = Depends(get_user_service),
+    product_service: ProductService = Depends(get_product_service),
     limit: int = 10,
     offset: int = 0
 ):
@@ -25,7 +26,7 @@ async def read_products(
                 "name": product.name,
                 "description": product.description,
                 "price": product.price,
-                "stock": product.stock,
+                "stock": getattr(product, "stock", None),
                 "image_url": product.product_image_url
             }
             for product in products
@@ -41,7 +42,7 @@ async def read_products(
 @router.get("/{product_id}", response_model=None)
 async def read_product(
     product_id: uuid.UUID,
-    product_service: ProductService = Depends(get_user_service)
+    product_service: ProductService = Depends(get_product_service)
 ):
     product = await product_service.get_product_by_id(product_id)
     if not product:
@@ -59,7 +60,7 @@ async def read_product(
             "name": product.name,
             "description": product.description,
             "price": product.price,
-            "stock": product.stock,
+            "stock": getattr(product, "stock", None),
             "image_url": product.product_image_url
         },
         status_code=status.HTTP_200_OK
@@ -67,10 +68,27 @@ async def read_product(
 
 @router.post("/", response_model=None)
 async def create_product(
-    product_in: ProductBase,
+    name: str = Form(...),
+    price: int = Form(...),
+    stock: int = Form(...),
+    description: Optional[str] = Form(None),
+    image: Optional[UploadFile] = File(None),
     current_user: MstUser = Depends(get_current_admin),
-    product_service: ProductService = Depends(get_user_service)
+    product_service: ProductService = Depends(get_product_service),
+    image_service: ImageService = Depends()
 ):
+    image_url = None
+    if image:
+        image_url = await image_service.upload_image(image)
+
+    product_in = ProductCreate(
+        name=name,
+        description=description,
+        price=price,
+        stock=stock,
+        product_image_url=image_url,
+    )
+
     product = await product_service.create_product(product_in)
     return create_response(
         success=True,
@@ -80,7 +98,7 @@ async def create_product(
             "name": product.name,
             "description": product.description,
             "price": product.price,
-            "stock": product.stock,
+            "stock": getattr(product, "stock", None),
             "image_url": product.product_image_url
         },
         status_code=status.HTTP_201_CREATED
@@ -91,7 +109,7 @@ async def update_product(
     product_id: uuid.UUID,
     product_in: ProductUpdate,
     current_user: MstUser = Depends(get_current_admin),
-    product_service: ProductService = Depends(get_user_service)
+    product_service: ProductService = Depends(get_product_service)
 ):
     product = await product_service.update_product(product_id, product_in)
     if not product:
@@ -109,7 +127,7 @@ async def update_product(
             "name": product.name,
             "description": product.description,
             "price": product.price,
-            "stock": product.stock,
+            "stock": getattr(product, "stock", None),
             "image_url": product.product_image_url
         },
         status_code=status.HTTP_200_OK
@@ -120,7 +138,7 @@ async def update_product_stock(
     product_id: uuid.UUID,
     stock: int,
     current_user: MstUser = Depends(get_current_admin),
-    product_service: ProductService = Depends(get_user_service)
+    product_service: ProductService = Depends(get_product_service)
 ):
     product_stock = await product_service.update_product_stock(product_id, stock)
     if not product_stock:
@@ -144,16 +162,22 @@ async def update_product_stock(
 async def delete_product(
     product_id: uuid.UUID,
     current_user: MstUser = Depends(get_current_admin),
-    product_service: ProductService = Depends(get_user_service)
+    product_service: ProductService = Depends(get_product_service),
+    image_service: ImageService = Depends()
 ):
-    success = await product_service.delete_product(product_id)
-    if not success:
+    product = await product_service.get_product_by_id(product_id)
+    if not product:
         return create_response(
             success=False,
             message="Product not found",
             error_code="PRODUCT_NOT_FOUND",
             status_code=status.HTTP_404_NOT_FOUND
         )
+
+    if product.product_image_url:
+        image_service.delete_image(product.product_image_url)
+
+    success = await product_service.delete_product(product_id)
     return create_response(
         success=True,
         message="Product deleted successfully",
