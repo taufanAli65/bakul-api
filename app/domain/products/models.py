@@ -19,14 +19,16 @@ class MstProduct(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by = Column(String, nullable=True)
 
+    stocks = relationship("TrnProductStock", cascade="all, delete-orphan", back_populates="product")
+
 class TrnProductStock(Base):
     __tablename__ = "trn_product_stock"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    id_product = Column(UUID(as_uuid=True), ForeignKey("mst_product.id_product"))
+    id_product = Column(UUID(as_uuid=True), ForeignKey("mst_product.id_product", ondelete="CASCADE"))
     stock = Column(Integer, default=0)
     
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    product = relationship("MstProduct")
+    product = relationship("MstProduct", back_populates="stocks")
