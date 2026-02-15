@@ -15,12 +15,6 @@ class TransactionStatus(str, enum.Enum):
     COMPLETED = "completed"
     SHIPPED = "shipped"
 
-class MstExpeditionService(Base):
-    __tablename__ = "mst_expedition_service"
-
-    id_expedition_service = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    name = Column(String, nullable=False)
-
 class MstTransaction(Base):
     __tablename__ = "mst_transactions"
 

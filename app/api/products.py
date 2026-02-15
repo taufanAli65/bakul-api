@@ -4,7 +4,7 @@ from app.domain.users.schemas import UserRole
 from app.domain.products.schemas import ProductBase, ProductCreate, ProductUpdate
 from app.domain.users.models import MstUser
 from app.core.dependencies import get_user_service, get_current_admin
-from app.domain.products.service import ProductService
+from app.domain.products.services import ProductService
 from app.utils.response_utils import create_response
 
 router = APIRouter()

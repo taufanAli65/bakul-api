@@ -13,7 +13,8 @@ from app.core.base_class import Base
 from app.core.config import settings
 from app.domain.users.models import MstUser
 from app.domain.products.models import MstProduct, TrnProductStock
-from app.domain.transactions.models import MstTransaction, TrnTransactionItem, TrnTransactionStatus, MstExpeditionService
+from app.domain.transactions.models import MstTransaction, TrnTransactionItem, TrnTransactionStatus
+from app.domain.expeditions.models import MstExpeditionService
 from app.domain.carts.models import MstCart
 
 config = context.config
